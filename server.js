@@ -30,24 +30,28 @@ const wss = new WebSocket.Server({ noServer: true });
 // Map to store clients with their senderId
 const clients = new Map();
 
-// Add WebSocket connection handler
 wss.on("connection", (ws) => {
-  // Handle incoming messages from clients (to register senderId)
+  console.log("New WebSocket client connected");
+
+  // Temporarily add the client with a null senderId
+  clients.set(ws, null);
+
+  // Listen for a message to register the client's senderId
   ws.on("message", (message) => {
     try {
-      const { senderId } = JSON.parse(message);
-      if (senderId) {
-        clients.set(ws, senderId); // Map the client (WebSocket) to its senderId
-        console.log(`Registered senderId: ${senderId}`);
+      const data = JSON.parse(message);
+      if (data.senderId) {
+        clients.set(ws, data.senderId); // Update the senderId for this client
+        console.log(`Registered client with senderId: ${data.senderId}`);
       }
     } catch (error) {
-      console.error("Error parsing message:", error);
+      console.error("Invalid message received:", message);
     }
   });
 
-  // Remove client from list when disconnected
+  // Handle WebSocket disconnection
   ws.on("close", () => {
-    clients.delete(ws);
+    clients.delete(ws); // Remove the client from the Map
     console.log("WebSocket client disconnected");
   });
 });
@@ -60,7 +64,7 @@ db.collection("notifications").onSnapshot((snapshot) => {
       console.log("New notification:", notification);
 
       // Broadcast the notification to all connected WebSocket clients
-      clients.forEach((client, clientSenderId) => {
+      clients.forEach((clientSenderId, client) => {
         console.log(`Attempting to send to client: ${clientSenderId}`);
         if (
           client.readyState === WebSocket.OPEN &&
