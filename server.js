@@ -65,11 +65,11 @@ db.collection("notifications").onSnapshot((snapshot) => {
 // Endpoint to send a notification to Firestore
 app.post("/send-notification", express.json(), async (req, res) => {
   try {
-    const { userId, message } = req.body;
+    const { senderId, message } = req.body;
 
     // Save notification in Firestore
     await db.collection("notifications").add({
-      userId,
+      senderId,
       message,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
     });
