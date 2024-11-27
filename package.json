@@ -19,6 +19,7 @@
   "homepage": "https://github.com/biroman/mafia-realtime#readme",
   "dependencies": {
     "express": "^4.21.1",
-    "firebase-admin": "^13.0.1"
+    "firebase-admin": "^13.0.1",
+    "ws": "^8.18.0"
   }
 }
