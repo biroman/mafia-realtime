@@ -27,21 +27,28 @@ app.use(cors(corsOptions)); // Enable CORS with the specified options
 // Initialize WebSocket server
 const wss = new WebSocket.Server({ noServer: true });
 
-// List of connected WebSocket clients
-const clients = [];
+// Map to store clients with their senderId
+const clients = new Map();
 
 // Add WebSocket connection handler
 wss.on("connection", (ws) => {
-  clients.push(ws);
-  console.log("New WebSocket client connected");
+  // Handle incoming messages from clients (to register senderId)
+  ws.on("message", (message) => {
+    try {
+      const { senderId } = JSON.parse(message);
+      if (senderId) {
+        clients.set(ws, senderId); // Map the client (WebSocket) to its senderId
+        console.log(`Registered senderId: ${senderId}`);
+      }
+    } catch (error) {
+      console.error("Error parsing message:", error);
+    }
+  });
 
   // Remove client from list when disconnected
   ws.on("close", () => {
-    const index = clients.indexOf(ws);
-    if (index > -1) {
-      clients.splice(index, 1);
-      console.log("WebSocket client disconnected");
-    }
+    clients.delete(ws);
+    console.log("WebSocket client disconnected");
   });
 });
 
@@ -53,8 +60,11 @@ db.collection("notifications").onSnapshot((snapshot) => {
       console.log("New notification:", notification);
 
       // Broadcast the notification to all connected WebSocket clients
-      clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
+      clients.forEach((clientSenderId, client) => {
+        if (
+          client.readyState === WebSocket.OPEN &&
+          clientSenderId !== notification.senderId
+        ) {
           client.send(JSON.stringify(notification));
         }
       });
