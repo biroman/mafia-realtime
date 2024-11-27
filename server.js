@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors"); // Import the CORS package
 const admin = require("firebase-admin");
 const WebSocket = require("ws"); // WebSocket library
 const app = express();
@@ -13,6 +14,15 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
+
+// Enable CORS for your frontend URL (in this case https://mafiaspillet.no)
+const corsOptions = {
+  origin: "https://mafiaspillet.no", // Replace this with your frontend URL
+  methods: "GET,POST", // Allow the methods that your frontend will use
+  allowedHeaders: "Content-Type", // Allow the necessary headers
+};
+
+app.use(cors(corsOptions)); // Enable CORS with the specified options
 
 // Initialize WebSocket server
 const wss = new WebSocket.Server({ noServer: true });
@@ -52,31 +62,16 @@ db.collection("notifications").onSnapshot((snapshot) => {
   });
 });
 
+// Endpoint to send a notification to Firestore
 app.post("/send-notification", express.json(), async (req, res) => {
   try {
-    const { userId, city, correctCity, message } = req.body;
+    const { userId, message } = req.body;
 
     // Save notification in Firestore
-    const docRef = await db.collection("notifications").add({
+    await db.collection("notifications").add({
       userId,
-      city,
-      correctCity,
       message,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    // Broadcast the notification to all connected WebSocket clients
-    const notification = {
-      userId,
-      city,
-      correctCity,
-      message,
-    };
-
-    clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(notification));
-      }
     });
 
     res.status(200).send("Notification sent!");
