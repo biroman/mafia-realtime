@@ -52,16 +52,31 @@ db.collection("notifications").onSnapshot((snapshot) => {
   });
 });
 
-// Endpoint to send a notification to Firestore
 app.post("/send-notification", express.json(), async (req, res) => {
   try {
-    const { userId, message } = req.body;
+    const { userId, city, correctCity, message } = req.body;
 
     // Save notification in Firestore
-    await db.collection("notifications").add({
+    const docRef = await db.collection("notifications").add({
       userId,
+      city,
+      correctCity,
       message,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Broadcast the notification to all connected WebSocket clients
+    const notification = {
+      userId,
+      city,
+      correctCity,
+      message,
+    };
+
+    clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(notification));
+      }
     });
 
     res.status(200).send("Notification sent!");
