@@ -4,6 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
+    "start": "node main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/biroman/mafia-realtime/issues"
   },
-  "homepage": "https://github.com/biroman/mafia-realtime#readme"
+  "homepage": "https://github.com/biroman/mafia-realtime#readme",
+  "dependencies": {
+    "express": "^4.21.1"
+  }
 }
