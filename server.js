@@ -60,11 +60,13 @@ db.collection("notifications").onSnapshot((snapshot) => {
       console.log("New notification:", notification);
 
       // Broadcast the notification to all connected WebSocket clients
-      clients.forEach((clientSenderId, client) => {
+      clients.forEach((client, clientSenderId) => {
+        console.log(`Attempting to send to client: ${clientSenderId}`);
         if (
           client.readyState === WebSocket.OPEN &&
           clientSenderId !== notification.senderId
         ) {
+          console.log(`Sending notification to client: ${clientSenderId}`);
           client.send(JSON.stringify(notification));
         }
       });
