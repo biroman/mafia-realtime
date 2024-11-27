@@ -65,13 +65,20 @@ db.collection("notifications").onSnapshot((snapshot) => {
 // Endpoint to send a notification to Firestore
 app.post("/send-notification", express.json(), async (req, res) => {
   try {
-    const { senderId, message } = req.body;
+    const { senderId, user, city, correctCity } = req.body;
 
-    // Save notification in Firestore
+    // Ensure all required fields are provided
+    if (!senderId || !user || !city || correctCity === undefined) {
+      return res.status(400).send("Missing required fields");
+    }
+
+    // Save notification in Firestore with the updated structure
     await db.collection("notifications").add({
-      senderId,
-      message,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      senderId, // The sender of the notification
+      user, // The user who receives the notification
+      city, // The city mentioned in the notification
+      correctCity, // Whether the city is correct or not
+      timestamp: admin.firestore.FieldValue.serverTimestamp(), // Timestamp for when the notification was created
     });
 
     res.status(200).send("Notification sent!");
